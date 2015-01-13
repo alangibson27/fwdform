@@ -39,12 +39,15 @@ def forward(uuid):
     user = User.query.filter_by(uuid=uuid).first()
     if not user:
         return ('User not found', 406)
-    print("About to send message")
-    print(request.form['email'])
-    print(type(request.form['email']))
-    print(type(request.form['name']))
-    print(request.form['name'])
-    print(request.form['message'])
+    try:
+        print("About to send message")
+        print(request.form['email'])
+        print(request.form['name'])
+        print(request.form['message'])
+    except:
+        print "Unexpected error:", sys.exc_info()
+        raise
+
     message = {
                'to': [{'email': user.email}],
                'from_email': request.form['email'],
