@@ -51,9 +51,9 @@ def forward(uuid):
 
     message = {
                'to': [{'email': user.email}],
-               'from_email': request.form['email'],
-               'subject': 'Message from {}'.format(request.form['name']),
-               'text': request.form['message'],
+               'from_email': request.form['email'.encode('utf-8')],
+               'subject': 'Message from {}'.format(request.form['name'].encode('utf-8')),
+               'text': request.form['message'.encode('utf-8')],
               }
     result = mandrill_client.messages.send(message=message)
     if result[0]['status'] != 'sent':
