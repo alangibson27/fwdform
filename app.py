@@ -42,9 +42,9 @@ def forward(uuid):
         return ('User not found', 406)
     try:
         print("About to send message")
-        print(request.form['email'])
-        print(request.form['name'])
-        print(request.form['message'])
+        print(request.form['email'].encode('utf-8'))
+        print(request.form['name'].encode('utf-8'))
+        print(request.form['message'].encode('utf-8'))
     except:
         print "Unexpected error:", sys.exc_info()
         raise
