@@ -41,6 +41,8 @@ def forward(uuid):
         return ('User not found', 406)
     print("About to send message")
     print(request.form['email'])
+    print(type(request.form['email']))
+    print(type(request.form['name']))
     print(request.form['name'])
     print(request.form['message'])
     message = {
