@@ -39,9 +39,9 @@ def forward(uuid):
     user = User.query.filter_by(uuid=uuid).first()
     if not user:
         return ('User not found', 406)
-    from_email = request.form['email'.encode('utf-8')]
+    from_email = request.form['email'].encode('utf-8')
     from_name = request.form['name'].encode('utf-8')
-    message_text = request.form['message'.encode('utf-8')]
+    message_text = request.form['message'].encode('utf-8')
     message = {
                'to': [{'email': user.email}],
                'from_email': from_email,
