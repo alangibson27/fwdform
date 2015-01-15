@@ -4,10 +4,12 @@ from uuid import uuid4
 from mandrill import Mandrill
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask import Flask, request, redirect, abort
+from flask_crossdomain import crossdomain
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 mandrill_client = Mandrill(os.environ['MANDRILL_API_KEY'])
+partner_domain = os.environ['PARTNER_DOMAIN']
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -35,6 +37,7 @@ def register():
     return "Token: {}".format(user.uuid)
 
 @app.route('/user/<uuid>', methods=['POST'])
+@crossdomain(origin = partner_domain)
 def forward(uuid):
     user = User.query.filter_by(uuid=uuid).first()
     if not user:
@@ -51,7 +54,7 @@ def forward(uuid):
     result = mandrill_client.messages.send(message=message)
     if result[0]['status'] != 'sent':
         abort(500)
-    return 'Your message was sent successfully'
+    return 'Success'
 
 @app.errorhandler(400)
 def bad_parameters(e):
@@ -62,5 +65,6 @@ def bad_parameters(e):
 
 @app.errorhandler(500)
 def error(e):
+    print(e)
     return ('Sorry, something went wrong!', 500)
 
