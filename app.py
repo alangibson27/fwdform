@@ -49,13 +49,13 @@ def forward(uuid):
     return 'Success'
 
 def build_message(user, request):
-    from_email = request.form['email'].encode('utf-8')
-    from_name = request.form['name'].encode('utf-8')
+    from_email = unicode(request.form['email'])
+    from_name = unicode(request.form['name'])
 
-    message_text = unicode(request.form['message'].encode('utf-8'))
-    other_fields = [key + ": " + value for (key, value) in request.form.items() if key not in ['email', 'name', 'message']]
+    message_text = unicode(request.form['message'])
+    other_fields = [unicode(key) + ": " + unicode(value) for (key, value) in request.form.items() if key not in ['email', 'name', 'message']]
     other_fields.append(message_text)
-    full_text = "\n".join(other_fields)
+    full_text = u"\n".join(other_fields)
 
     message = {
         'to': [{'email': user.email}],
