@@ -11,7 +11,7 @@ class MessageBuilderTest(unittest.TestCase):
 
     def test_build_message_with_extra_fields(self):
         form_data = dict(
-            name = "Alan",
+            name = "アラン",
             email = "alangibson27@gmail.com",
             lessonType = "%E3%83%97%E3%83%A9%E3%82%A4%E3%83%99%E3%83%BC%E3%83%88%E3%83%AC%E3%83%83%E3%82%B9%E3%83%B3",
             message = "アラン")

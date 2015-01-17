@@ -60,7 +60,7 @@ def build_message(user, request):
     message = {
         'to': [{'email': user.email}],
         'from_email': from_email,
-        'subject': 'Message from {}'.format(from_name),
+        'subject': u'Message from {}'.format(from_name),
         'text': full_text,
         }
     return message
