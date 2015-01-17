@@ -1,4 +1,3 @@
-import sys
 import os
 from uuid import uuid4
 
@@ -43,19 +42,28 @@ def forward(uuid):
     user = User.query.filter_by(uuid=uuid).first()
     if not user:
         return ('User not found', 406)
-    from_email = request.form['email'].encode('utf-8')
-    from_name = request.form['name'].encode('utf-8')
-    message_text = request.form['message'].encode('utf-8')
-    message = {
-               'to': [{'email': user.email}],
-               'from_email': from_email,
-               'subject': 'Message from {}'.format(from_name),
-               'text': message_text,
-              }
+    message = build_message(user, request)
     result = mandrill_client.messages.send(message=message)
     if result[0]['status'] != 'sent':
         abort(500)
     return 'Success'
+
+def build_message(user, request):
+    from_email = request.form['email'].encode('utf-8')
+    from_name = request.form['name'].encode('utf-8')
+
+    message_text = unicode(request.form['message'].encode('utf-8'))
+    other_fields = [key + ": " + value for (key, value) in request.form.items() if key not in ['email', 'name', 'message']]
+    other_fields.append(message_text)
+    full_text = "\n".join(other_fields)
+
+    message = {
+        'to': [{'email': user.email}],
+        'from_email': from_email,
+        'subject': 'Message from {}'.format(from_name),
+        'text': full_text,
+        }
+    return message
 
 @app.errorhandler(400)
 def bad_parameters(e):
