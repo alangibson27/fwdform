@@ -8,6 +8,7 @@ from flask_crossdomain import crossdomain
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['REGISTRATION_ENABLED'] = os.environ.get('REGISTRATION_ENABLED')
 mandrill_client = Mandrill(os.environ['MANDRILL_API_KEY'])
 partner_domain = os.environ['PARTNER_DOMAIN']
 db = SQLAlchemy(app)
@@ -28,6 +29,9 @@ def index():
 
 @app.route('/register', methods=['POST'])
 def register():
+    if app.config['REGISTRATION_ENABLED'] != 'True':
+        return ('Regsitration disabled', 403)
+
     user = User.query.filter_by(email=request.form['email']).first()
     if user:
         return ('Email already registered', 403)

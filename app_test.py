@@ -1,24 +1,27 @@
-# coding=UTF-8
-
-import app
 import unittest
-import flask
+from app import app,db
+from flask.ext.testing import TestCase
 
-class MessageBuilderTest(unittest.TestCase):
+class AppTest(TestCase):
 
-    def setUp(self):
-        self.app = flask.Flask(__name__)
+    def create_app(self):
+        app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        db.create_all()
+        return app
 
-    def test_build_message_with_extra_fields(self):
-        form_data = dict(
-            name = "アラン",
-            email = "alangibson27@gmail.com",
-            lessonType = "%E3%83%97%E3%83%A9%E3%82%A4%E3%83%99%E3%83%BC%E3%83%88%E3%83%AC%E3%83%83%E3%82%B9%E3%83%B3",
-            message = "アラン")
+    def test_registration_enabled(self):
+        app.config['REGISTRATION_ENABLED'] = 'True'
+        registration_request = {'email': 'testuser@example.com'}
+        response = self.client.post('/register', data = registration_request)
+        self.assert200(response)
+        self.assertTrue(response.get_data().startswith('Token:'))
 
-        with self.app.test_request_context("/", data = form_data, content_type = "application/x-www-form-urlencoded"):
-            msg = app.build_message(app.User("me@example.com"), flask.request)
+    def test_registration_disabled(self):
+        app.config['REGISTRATION_ENABLED'] = 'False'
+        registration_request = {'email': 'testuser@example.com'}
+        response = self.client.post('/register', data = registration_request)
+        self.assert403(response)
 
-            self.assertEquals(
-                msg['text'],
-                u"lessonType: %E3%83%97%E3%83%A9%E3%82%A4%E3%83%99%E3%83%BC%E3%83%88%E3%83%AC%E3%83%83%E3%82%B9%E3%83%B3\nアラン")
+if __name__ == '__main__':
+    unittest.main()
