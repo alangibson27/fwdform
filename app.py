@@ -1,4 +1,5 @@
 import os
+import sys
 from uuid import uuid4
 
 from mandrill import Mandrill
@@ -6,15 +7,19 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask import Flask, request, redirect, abort
 from flask_crossdomain import crossdomain
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-app.config['REGISTRATION_ENABLED'] = os.environ.get('REGISTRATION_ENABLED')
-mandrill_client = Mandrill(os.environ['MANDRILL_API_KEY'])
-partner_domain = os.environ['PARTNER_DOMAIN']
-db = SQLAlchemy(app)
+try:
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+    app.config['REGISTRATION_ENABLED'] = os.environ.get('REGISTRATION_ENABLED')
+    mandrill_client = Mandrill(os.environ['MANDRILL_API_KEY'])
+    partner_domain = os.environ['PARTNER_DOMAIN']
+    db = SQLAlchemy(app)
+except:
+    print "Unexpected error:", sys.exc_info()[0]
+    raise
+
 
 class User(db.Model):
-
     def __init__(self, email):
         self.email = email
         self.uuid = str(uuid4())
@@ -23,9 +28,11 @@ class User(db.Model):
     email = db.Column(db.String(200), unique=True)
     uuid = db.Column(db.String(36), unique=True)
 
+
 @app.route('/')
 def index():
     return redirect('http://samdobson.github.io/fwdform')
+
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -40,6 +47,7 @@ def register():
     db.session.commit()
     return "Token: {}".format(user.uuid)
 
+
 @app.route('/user/<uuid>', methods=['POST'])
 @crossdomain(origin = partner_domain)
 def forward(uuid):
@@ -51,6 +59,7 @@ def forward(uuid):
     if result[0]['status'] != 'sent':
         abort(500)
     return 'Success'
+
 
 def build_message(user, request):
     from_email = unicode(request.form['email'])
@@ -69,12 +78,14 @@ def build_message(user, request):
         }
     return message
 
+
 @app.errorhandler(400)
 def bad_parameters(e):
     return ('<p>Missing information. Press the back button to complete '
             'the empty fields.</p><p><i>Developers: we were expecting '
             'the parameters "name", "email" and "message". You might '
             'also consider using JS validation.</i>', 400)
+
 
 @app.errorhandler(500)
 def error(e):

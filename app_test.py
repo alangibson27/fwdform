@@ -1,12 +1,11 @@
 # coding=UTF-8
 
 import unittest
-import flask
 from app import app,db,User
 from flask.ext.testing import TestCase
 
-class AppTest(TestCase):
 
+class AppTest(TestCase):
     def create_app(self):
         app.config['TESTING'] = True
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
