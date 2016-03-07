@@ -12,6 +12,13 @@ class AppTest(TestCase):
         db.create_all()
         return app
 
+    def setUp(self):
+        db.create_all()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+
     def test_registration_enabled(self):
         app.config['REGISTRATION_ENABLED'] = 'True'
         registration_request = {'email': 'testuser@example.com'}
@@ -36,6 +43,19 @@ class AppTest(TestCase):
                      'otherField': 'otherField',
                      'message': 'アラン'}
         response = self.client.post('/user/%s' % user.uuid, data = form_data)
+        self.assert200(response)
+
+    def test_send_message_ses(self):
+        user = User('alangibson27@gmail.com')
+        db.session.add(user)
+        db.session.commit()
+
+        form_data = {'name': 'アラン',
+                     'email': 'alan@socialthingy.com',
+                     'lessonType': 'レッスン',
+                     'otherField': 'otherField',
+                     'message': 'アラン'}
+        response = self.client.post('/to/%s' % user.uuid, data = form_data)
         self.assert200(response)
 
     def test_send_message_wrong_user(self):

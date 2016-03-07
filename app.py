@@ -1,5 +1,6 @@
 import os
 import sys
+import boto3
 from uuid import uuid4
 
 from mandrill import Mandrill
@@ -12,6 +13,10 @@ try:
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
     app.config['REGISTRATION_ENABLED'] = os.environ.get('REGISTRATION_ENABLED')
     mandrill_client = Mandrill(os.environ['MANDRILL_API_KEY'])
+    ses_client = boto3.client('ses',
+                              aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                              aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+                              region_name=os.environ['AWS_REGION'])
     partner_domain = os.environ['PARTNER_DOMAIN']
     db = SQLAlchemy(app)
 except:
@@ -61,14 +66,42 @@ def forward(uuid):
     return 'Success'
 
 
+@app.route('/to/<uuid>', methods=['POST'])
+@crossdomain(origin = partner_domain)
+def forward_ses(uuid):
+    user = User.query.filter_by(uuid=uuid).first()
+    if not user:
+        return ('User not found', 406)
+
+    result = ses_client.send_email(
+        Source=user.email,
+        Destination={
+            'ToAddresses': [user.email]
+        },
+        Message={
+            'Subject': {
+                'Data': u'Message from {}'.format(unicode(request.form['name'])),
+                'Charset': 'UTF-8'
+            },
+            'Body': {
+                'Text': {
+                    'Data': build_message_body(request),
+                    'Charset': 'UTF-8'
+                }
+            }
+        },
+        ReplyToAddresses=[request.form['email']]
+    )
+    if result['ResponseMetadata']['HTTPStatusCode'] != 200:
+        abort(500)
+    return 'Success {}'.format(result['MessageId'])
+
+
 def build_message(user, request):
     from_email = unicode(request.form['email'])
     from_name = unicode(request.form['name'])
 
-    message_text = unicode(request.form['message'])
-    other_fields = [unicode(key) + ": " + unicode(value) for (key, value) in request.form.items() if key not in ['email', 'name', 'message']]
-    other_fields.append(message_text)
-    full_text = u"\n".join(other_fields)
+    full_text = build_message_body(request)
 
     message = {
         'to': [{'email': user.email}],
@@ -77,6 +110,13 @@ def build_message(user, request):
         'text': full_text,
         }
     return message
+
+
+def build_message_body(request):
+    message_text = unicode(request.form['message'])
+    other_fields = [unicode(key) + ": " + unicode(value) for (key, value) in request.form.items() if key not in ['email', 'name', 'message']]
+    other_fields.append(message_text)
+    return u"\n".join(other_fields)
 
 
 @app.errorhandler(400)
