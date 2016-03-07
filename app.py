@@ -12,6 +12,7 @@ try:
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
     app.config['REGISTRATION_ENABLED'] = os.environ.get('REGISTRATION_ENABLED')
+    app.config['SES_SENDER'] = os.environ['SES_SENDER']
     mandrill_client = Mandrill(os.environ['MANDRILL_API_KEY'])
     ses_client = boto3.client('ses',
                               aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
@@ -74,7 +75,7 @@ def forward_ses(uuid):
         return ('User not found', 406)
 
     result = ses_client.send_email(
-        Source=user.email,
+        Source=app.config['SES_SENDER'],
         Destination={
             'ToAddresses': [user.email]
         },
