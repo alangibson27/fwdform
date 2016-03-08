@@ -115,7 +115,7 @@ def build_message(user, request):
 
 def build_message_body(request):
     message_text = unicode(request.form['message'])
-    other_fields = [unicode(key) + ": " + unicode(value) for (key, value) in request.form.items() if key not in ['email', 'name', 'message']]
+    other_fields = [unicode(key) + ": " + unicode(value) for (key, value) in request.form.items() if key not in ['name', 'message']]
     other_fields.append(message_text)
     return u"\n".join(other_fields)
 
